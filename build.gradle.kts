@@ -2,6 +2,7 @@ plugins {
 	java
 	id("org.springframework.boot") version "3.4.3"
 	id("io.spring.dependency-management") version "1.1.7"
+	id("io.gatling.gradle") version "3.13.5.1"
 }
 
 group = "com.example"
@@ -29,11 +30,15 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-web")
 	implementation("org.springframework.boot:spring-boot-starter-data-redis")  // 这个 starter 默认使用 Lettuce 作为 Redis 客户端。
 	implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3")
+
 	compileOnly("org.projectlombok:lombok")
 	runtimeOnly("com.h2database:h2")
 	annotationProcessor("org.projectlombok:lombok")
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+	testImplementation("io.gatling:gatling-core:3.13.5")
+	testImplementation("io.gatling:gatling-http:3.13.5")
 }
 
 tasks.withType<Test> {
