@@ -4,22 +4,34 @@ import com.example.user_management.exception.UserExistsException;
 import com.example.user_management.exception.UserNotFoundException;
 import com.example.user_management.model.User;
 import com.example.user_management.repository.UserRepository;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    private static final String REDIS_KEY = "users";
 
-    public UserService(UserRepository userRepository) {
+    private final UserRepository userRepository;
+    private final RedisTemplate<String, Object> redisTemplate;
+
+    public UserService(UserRepository userRepository, RedisTemplate<String, Object> redisTemplate) {
         this.userRepository = userRepository;
+        this.redisTemplate = redisTemplate;
     }
 
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        List<User> cachedUsers = (List<User>) redisTemplate.opsForValue().get(REDIS_KEY);
+        if (cachedUsers != null) {
+            return cachedUsers;
+        }
+
+        List<User> users = userRepository.findAll();
+        if (!users.isEmpty()) {
+            redisTemplate.opsForValue().set(REDIS_KEY, users);
+        }
+        return users;
     }
 
     public User getUserById(int id) {
@@ -32,6 +44,7 @@ public class UserService {
             //throw new ResponseStatusException(HttpStatus.CONFLICT, "This user is already in the system");
             throw new UserExistsException("This user is already in the system");
         }
+        redisTemplate.delete(REDIS_KEY);
         return userRepository.save(user);
     }
 
